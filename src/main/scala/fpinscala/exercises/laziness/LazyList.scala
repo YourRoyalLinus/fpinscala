@@ -1,10 +1,14 @@
 package fpinscala.exercises.laziness
 
+import LazyList.*
+
 enum LazyList[+A]:
   case Empty
   case Cons(h: () => A, t: () => LazyList[A])
 
-  def toList: List[A] = ???
+  def toList: List[A] = this match
+    case Empty => Nil
+    case Cons(h, t) => h() :: t().toList
 
   def foldRight[B](z: => B)(f: (A, => B) => B): B = // The arrow `=>` in front of the argument type `B` means that the function `f` takes its second argument by name and may choose not to evaluate it.
     this match
@@ -19,15 +23,27 @@ enum LazyList[+A]:
     case Empty => None
     case Cons(h, t) => if (f(h())) Some(h()) else t().find(f)
 
-  def take(n: Int): LazyList[A] = ???
+  def take(n: Int): LazyList[A] = this match
+    case Cons(h, t) if n > 1 => cons(h(), t().take(n - 1))
+    case Cons(h, _) if n == 1 => cons(h(), empty)
+    case _ => empty
 
-  def drop(n: Int): LazyList[A] = ???
+  @annotation.tailrec
+  final def drop(n: Int): LazyList[A] = this match
+    case Cons(_, t) if n > 0 => t().drop(n - 1)
+    case _ => this
 
-  def takeWhile(p: A => Boolean): LazyList[A] = ???
+  def takeWhile(p: A => Boolean): LazyList[A] = this match
+  case Cons(h,t) if p(h()) => cons(h(), t().takeWhile(p))
+  case _ => empty
 
-  def forAll(p: A => Boolean): Boolean = ???
+  def forAll(p: A => Boolean): Boolean = this match
+    case Cons(h, t) if p(h()) => t().forAll(p)
+    case _ => false
 
-  def headOption: Option[A] = ???
+  def headOption: Option[A] = this match
+    case Empty => None
+    case Cons(h, _) => Some(h())
 
   // 5.7 map, filter, append, flatmap using foldRight. Part of the exercise is
   // writing your own function signatures.
