@@ -57,9 +57,14 @@ object RNG:
       val (xs, r2) = ints(count - 1)(r1)
       (x :: xs, r2)
 
-  def map2[A, B, C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] = ???
+  def map2[A, B, C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] =
+    rng =>
+      val (a, r1) ra(rng)
+      val (b, r2) rb(r1)
+      (f(a, b), r2)
 
-  def sequence[A](rs: List[Rand[A]]): Rand[List[A]] = ???
+  def sequence[A](rs: List[Rand[A]]): Rand[List[A]] =
+    rs.foldRight(unit(Nil: List[A]))((a, acc) => map2(r, acc)(_ :: _))
 
   def flatMap[A, B](r: Rand[A])(f: A => Rand[B]): Rand[B] = ???
 
