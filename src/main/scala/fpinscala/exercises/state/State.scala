@@ -46,29 +46,29 @@ object RNG:
   def double3(rng: RNG): ((Double,Double,Double), RNG) =
     val (d1, r2) = double(rng)
     val (d2, r3) = double(r2)
-    val (d2, r4) = double(r3)
+    val (d3, r4) = double(r3)
     ((d1, d2, d3), r4)
 
   def ints(count: Int)(rng: RNG): (List[Int], RNG) =
     if count <= 0 then
       (List(), rng)
     else
-      val (x, r1)  = rng.nextInt
+      val (x, r1) = rng.nextInt
       val (xs, r2) = ints(count - 1)(r1)
       (x :: xs, r2)
 
   def map2[A, B, C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] =
     rng =>
-      val (a, r1) ra(rng)
-      val (b, r2) rb(r1)
+      val (a, r1) = ra(rng)
+      val (b, r2) = rb(r1)
       (f(a, b), r2)
 
   def sequence[A](rs: List[Rand[A]]): Rand[List[A]] =
-    rs.foldRight(unit(Nil: List[A]))((a, acc) => map2(r, acc)(_ :: _))
+    rs.foldRight(unit(Nil: List[A]))((a, acc) => map2(a, acc)(_ :: _))
 
   def flatMap[A, B](r: Rand[A])(f: A => Rand[B]): Rand[B] =
     rng =>
-      val (a, rng1) = r(rng0)
+      val (a, rng1) = r(rng)
       f(a)(rng1)
 
   def mapViaFlatMap[A, B](r: Rand[A])(f: A => B): Rand[B] =
@@ -113,6 +113,10 @@ object State:
       s <- get // Gets the current state and assigns it to `s`.
       _ <- set(f(s)) // Sets the new state to `f` applied to `s`.
     yield ()
+
+  def get[S]: State[S, S] = s => (s, s)
+
+  def set[S](s: S): State[S, Unit] = _ => ((), s)
 
 enum Input:
   case Coin, Turn

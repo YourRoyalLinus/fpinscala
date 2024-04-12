@@ -85,7 +85,7 @@ object LazyList:
   def from(n: Int): LazyList[Int] =
     cons(n, from(n + 1))
 
-  lazy val fibs: LazyList[Int] = {
+  lazy val fibs: LazyList[Int] =
     def go(current: Int, next: Int): LazyList[Int] =
       cons(current, go(next, current + next))
     go(0, 1)
@@ -95,15 +95,15 @@ object LazyList:
       case None => empty
       case Some((h,s)) => cons(h, unfold(s)(f))
 
-  lazy val fibsViaUnfold: LazyList[Int] =
-    unfold((0, 1)):
-      case (current, next) => Some((current, next) => unfold(next, current + next))
+  val fibsViaUnfold: LazyList[Int] =
+    unfold((0,1)):
+      case (current, next) => Some((current, (next, current + next)))
 
   def fromViaUnfold(n: Int): LazyList[Int] =
     unfold(n)(n => Some((n, n + 1)))
 
   def continuallyViaUnfold[A](a: A): LazyList[A] =
-    unfold(a)(a => Some((a, ())))
+    unfold(())(_ => Some((a, ())))
 
   lazy val onesViaUnfold: LazyList[Int] =
     unfold(())(_ => Some((1, ())))
